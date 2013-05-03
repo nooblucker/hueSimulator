@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+
+var bridge = require("../bridge.js");
+
+bridge.listen(80);
+
+console.log("hue simulator listening on port 80");

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Hue Bridge Simulator Debugger</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-responsive.min.css" type="text/css" />
+        <link rel="stylesheet" href="css/main.css" type="text/css" />
+    </head>
+    <body>
+        <div id="debugger" class="container-fluid">
+            <div class="row-fluid">
+                <div class="span2" id="commands">
+                    <h3>commands</h3>
+                    <h4>Lights API</h4>
+                    <ul class="unstyled">
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/lights' data-body='' data-method='GET' >get all lights</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/lights/1' data-body='' data-method='GET' >get light state</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/lights/1' data-body='{"name":"new name"}' data-method='PUT' >rename light</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/lights/1/state' data-body='{
+    "hue": 50000,
+    "on": true,
+    "bri": 200
+}' data-method='PUT' >set light state</button></li>
+                    </ul>
+                    <h4>Groups API</h4>
+                    <ul class="unstyled">
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/groups' data-body='' data-method='GET' >get all groups</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/groups/1' data-body='' data-method='GET' >get group attributes</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/groups/1' data-body='{ "name":"Bedroom", "lights": ["1"] }' data-method='PUT' >set group attributes</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/groups/1/action' data-body='{
+    "on": true,
+    "hue": 2000,
+    "effect": "colorloop"
+}' data-method='PUT' >set group state</button></li>
+                    </ul>
+                    <h4>Configuration API</h4>
+                    <ul class="unstyled">
+                        <li><button class='btn btn-block' type="button" data-url='/api' data-body='{"devicetype":"test user","username":"newdeveloper"}' data-method='POST' >create user</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/config' data-body='' data-method='GET' >get configuration</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/config' data-body='{"proxyport":100}' data-method='PUT' >modify configuration</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/config/whitelist/usernameToBeDeleted' data-body='' data-method='DELETE' >delete user</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper' data-body='' data-method='GET' >get full state</button></li>
+                    </ul>
+                </div>
+                <div class="span10">
+                    <div id="traffic">
+                        <form id="request">
+                            <h1>Send command</h1>
+                            <div><label for="req-body">Message Body:</label> <textarea id="req-body" name="req-body" class='span12' rows="10" ></textarea></div>
+                            <div><label for="req-url">URL:</label> <input type="text" id="req-url" name="req-url" class="input-xxlarge" value="/api/newdeveloper" /></div>
+                            <div id="req-methods">
+                                <label class="radio inline"><input type="radio" name="req-method" value="GET" checked="checked" /> GET</label>
+                                <label class="radio inline"><input type="radio" name="req-method" value="PUT"/> PUT</label>
+                                <label class="radio inline"><input type="radio" name="req-method" value="POST" /> POST</label>
+                                <label class="radio inline"><input type="radio" name="req-method" value="DELETE" /> DELETE</label>    
+                            </div>
+                            <div>
+                                <button type="button" id="linkbutton" class="btn">Link-Button</button>
+                                <button type="submit" class="btn btn-primary">send</button>
+                            </div>
+                        </form>
+                        <div id="log"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="lib/jquery.js"></script>
+        <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+        <script src="js/main.js"></script>
+    </body>
+</html>
