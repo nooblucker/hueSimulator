@@ -34,7 +34,7 @@ $(function() {
         try {
             if (body !== "") {
                 data = JSON.parse(body);
-                body = "<pre>"+body+"</pre>";
+                body = "<pre>"+JSON.stringify(data, null, 2)+"</pre>";
             }
         } catch (e) {
             alert('malformed json: ' + e);
