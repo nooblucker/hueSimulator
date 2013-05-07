@@ -51,7 +51,7 @@ $(function() {
         });
 
         req.done(function(response) {
-            $("#log").prepend("<div class='response log'><pre>" + JSON.stringify(response) + "</pre></div>");
+            $("#log").prepend("<div class='response log'><pre>" + JSON.stringify(response, null, 2) + "</pre></div>");
         });
 
         req.fail(logError);
