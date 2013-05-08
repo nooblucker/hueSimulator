@@ -28,6 +28,7 @@ In the list on the left, you have predefined commands, so you don't always have 
 
 ## Routes
 
-`GET /linkbutton` will enable user registration for 30 seconds.
+`GET /linkbutton` will enable user registration for 30 seconds. By default, a user named "newdeveloper" is whitelisted. Registered users and state of the simulator will be lost when restarting. So you always have a "fresh" system.
 
 At the moment, all routes from the hue API are available, except schedules.
+
