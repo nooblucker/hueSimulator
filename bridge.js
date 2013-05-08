@@ -27,10 +27,16 @@ var whitelist = function(req, res, next) {
     ]);
 };
 
+var stringifyOutput = function(req, res, next) {
+    res.body = JSON.stringify(res.body);
+    next();
+};
+
 app.use(express.logger());
 app.use(express.static(__dirname + '/public_html'));
 app.use(express.bodyParser());
 app.use(allowCrossDomain);
+app.use(stringifyOutput);
 
 app.set('state', {
     "lights": {
