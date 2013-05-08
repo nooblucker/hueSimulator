@@ -4,6 +4,7 @@ var app = express();
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type')
     next();
 };
 
@@ -190,7 +191,6 @@ var selectSubsetFromJSON = function(json, keys) {
     if (typeof keys !== 'object') {
         keys = [keys];
     }
-    console.log(keys);
     for (var i = 0; i < keys.length; i++) {
         result[keys[i]] = json[keys[i]];
     }
@@ -359,7 +359,7 @@ app.post('/api', function(request, response) {
         response.send(200, [
             {
                 success: {
-                    username: username
+                    "username": username
                 }
             }
         ]);
