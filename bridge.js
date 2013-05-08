@@ -27,16 +27,10 @@ var whitelist = function(req, res, next) {
     ]);
 };
 
-var stringifyOutput = function(req, res, next) {
-    res.body = JSON.stringify(res.body);
-    next();
-};
-
 app.use(express.logger());
 app.use(express.static(__dirname + '/public_html'));
 app.use(express.bodyParser());
 app.use(allowCrossDomain);
-app.use(stringifyOutput);
 
 app.set('state', {
     "lights": {
@@ -178,7 +172,7 @@ app.get('/api/:username/lights', whitelist, function(req, res) {
     var result = mapObject(lights, function(light) {
         return selectSubsetFromJSON(light, 'name');
     });
-    res.send(200, result);
+    res.send(200, JSON.stringify(result));
 });
 
 var mapObject = function(obj, fn) {
@@ -205,7 +199,7 @@ var selectSubsetFromJSON = function(json, keys) {
 
 // get new lights TODO
 app.get('/api/:username/lights/new', whitelist, function(req, res) {
-    res.send(200, {
+    res.send(200, JSON.stringify({
         "7": {
             "name": "Hue Lamp 7"
         },
@@ -213,18 +207,18 @@ app.get('/api/:username/lights/new', whitelist, function(req, res) {
             "name": "Hue Lamp 8"
         },
         "lastscan": "2012-10-29T12:00:00"
-    });
+    }));
 });
 
 // search for new lights TODO
 app.post('/api/:username/lights', whitelist, function(req, res) {
-    res.send(200, [{"success": {"/lights": "Searching for new devices"}}]);
+    res.send(200, JSON.stringify([{"success": {"/lights": "Searching for new devices"}}]));
 });
 
 // get light
 app.get('/api/:username/lights/:id', whitelist, function(req, res) {
     var id = req.params.id;
-    res.send(200, app.get('state').lights[id]);
+    res.send(200, JSON.stringify(app.get('state').lights[id]));
 });
 
 // rename light
@@ -234,7 +228,7 @@ app.put('/api/:username/lights/:id', whitelist, function(req, res) {
     app.get('state').lights[id]["name"] = name;
     var success = {};
     success["/lights/" + id + "/name"] = name;
-    res.send(200, [{"success": success}]);
+    res.send(200, JSON.stringify([{"success": success}]));
 });
 
 // change light state
@@ -242,7 +236,7 @@ app.put('/api/:username/lights/:id/state', whitelist, function(req, res) {
     var id = req.params.id;
     var state = app.get('state').lights[id].state;
     var response = updateProperties(state, req.body, "/lights/" + id + "/state/");
-    res.send(200, response);
+    res.send(200, JSON.stringify(response));
 });
 
 var updateProperties = function(obj, props, successPath) {
@@ -276,13 +270,13 @@ app.get('/api/:username/groups', whitelist, function(req, res) {
     var result = mapObject(groups, function(group) {
         return selectSubsetFromJSON(group, 'name');
     });
-    res.send(200, result);
+    res.send(200, JSON.stringify(result));
 });
 
 // get group attributes
 app.get('/api/:username/groups/:id', whitelist, function(req, res) {
     var id = req.params.id;
-    res.send(200, app.get('state').groups[id]);
+    res.send(200, JSON.stringify(app.get('state').groups[id]));
 });
 
 // set group attributes
@@ -307,7 +301,7 @@ app.put('/api/:username/groups/:id', whitelist, function(req, res) {
         result.push({"success": success});
     }
 
-    res.send(200, result);
+    res.send(200, JSON.stringify(result));
 });
 
 // set group state
@@ -344,7 +338,7 @@ app.put('/api/:username/groups/:id/action', whitelist, function(req, res) {
         result.push({"success": success});
     }
 
-    res.send(200, result);
+    res.send(200, JSON.stringify(result));
 });
 
 // -- Configuration API
@@ -362,15 +356,15 @@ app.post('/api', function(request, response) {
             "create date": "2012-10-29T12:00:00",
             "name": devicetype
         };
-        response.send(200, [
+        response.send(200, JSON.stringify([
             {
                 success: {
                     "username": username
                 }
             }
-        ]);
+        ]));
     } else {
-        response.send(200, [
+        response.send(200, JSON.stringify([
             {
                 error: {
                     type: 101,
@@ -378,31 +372,31 @@ app.post('/api', function(request, response) {
                     description: 'link button not pressed'
                 }
             }
-        ]);
+        ]));
     }
 });
 
 // get config
 app.get('/api/:username/config', whitelist, function(request, response) {
-    response.send(200, app.get('state').config);
+    response.send(200, (app.get('state').config));
 });
 
 // change config
 app.put('/api/:username/config', whitelist, function(request, response) {
     var result = updateProperties(app.get('state').config, request.body, "/config/");
-    response.send(200, result);
+    response.send(200, JSON.stringify(result));
 });
 
 // delete user
 app.delete('/api/:username/config/whitelist/:userToBeDeleted', whitelist, function(req, res) {
     var deleteUsername = req.params.userToBeDeleted;
     delete app.get('state').config.whitelist[deleteUsername];
-    res.send(200, [{"success": "/config/whitelist/" + deleteUsername + " deleted."}]);
+    res.send(200, JSON.stringify([{"success": "/config/whitelist/" + deleteUsername + " deleted."}]));
 });
 
 // get full state
 app.get('/api/:username', whitelist, function(request, response) {
-    response.send(200, app.get('state'));
+    response.send(200, JSON.stringify(app.get('state')));
 });
 
 
