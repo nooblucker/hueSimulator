@@ -14,6 +14,11 @@ var allowCrossDomain = function(req, res, next) {
     }
 };
 
+var sendJSON = function(req, res, next) {
+    res.header('Content-Type', 'application/json; charset=UTF-8');
+    next();
+};
+
 var whitelist = function(req, res, next) {
     if (req && req.params && req.params.hasOwnProperty('username')) {
         var username = req.params.username;
@@ -37,6 +42,7 @@ app.use(express.logger());
 app.use(express.static(__dirname + '/public_html'));
 app.use(express.bodyParser());
 app.use(allowCrossDomain);
+app.use(sendJSON);
 
 app.set('state', {
     "lights": {
@@ -130,7 +136,7 @@ app.set('state', {
                 "name": "test user"
             }
         },
-        "swversion": "01003372",
+        "swversion": "01003542",
         "swupdate": {
             "updatestate": 0,
             "url": "",
@@ -383,8 +389,16 @@ app.post('/api', function(request, response) {
 });
 
 // get config
-app.get('/api/:username/config', whitelist, function(request, response) {
-    response.send(200, (app.get('state').config));
+app.get('/api/:username/config', function(req, res) {
+    // config does not give unauthorized_user error, but a public part of the config
+    if (req && req.params && req.params.hasOwnProperty('username')) {
+        var username = req.params.username;
+        if (app.get('state').config.whitelist.hasOwnProperty(username)) {
+            res.send(200, JSON.stringify(app.get('state').config));
+        }
+    }
+    // only send name and swversion if the user is not authed
+    res.send(200, JSON.stringify(selectSubsetFromJSON(app.get('state').config, ['name', 'swversion'])));
 });
 
 // change config
