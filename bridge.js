@@ -372,7 +372,7 @@ app.put('/api/:username/groups/:id/action', whitelist, function(req, res) {
 app.post('/api', function(request, response) {
     var devicetype = request.body.devicetype;
     var username = request.body.username;
-    if (username === '') {
+    if (!username) {
         username = "letmegeneratethatforyou";
     }
     if (app.get('state').config.linkbutton) {
