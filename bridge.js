@@ -223,7 +223,22 @@ app.get('/api/:username/lights/new', whitelist, function(req, res) {
 });
 
 // search for new lights TODO
+// accept a new light object and add it to lights list
+// since this isn't a real feature of the Hue bridge API, didn't modify the return value
 app.post('/api/:username/lights', whitelist, function(req, res) {
+    if(req.body && req.body.length > 0){
+        //figure out next index
+        var numKeys = Object.keys(app.get('state').lights).length;
+        //Clone one of the existing objects as a placeholder at the new index
+        app.get('state').lights[numKeys + 1] = JSON.parse(JSON.stringify(app.get('state').lights[1]));
+        var newLight = app.get('state').lights[numKeys + 1];
+        //update name
+        if(req.body.name != null && req.body.name != undefined){
+        	newLight.name = req.body.name;
+        }
+        //update state
+        updateProperties(newLight.state,req.body.state,null);
+    }
     res.send(200, JSON.stringify([{"success": {"/lights": "Searching for new devices"}}]));
 });
 
