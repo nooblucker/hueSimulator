@@ -2,7 +2,7 @@
 
 var parseArgs = require('minimist')
 var options = parseArgs(process.argv.slice(2), {
-    defaults: {
+    "default": {
         port: 80,
         hostname: undefined
     }
