@@ -6,7 +6,7 @@ As I started development of hueJS before getting my Hue starter kit, i needed to
 
 Using npm:
 
-```
+```sh
 sudo npm install -g hue-simulator
 ```
 
@@ -15,10 +15,20 @@ It should be installed [globally](http://blog.nodejitsu.com/npm-cheatsheet#Under
 ## Run
 
 Start the simulator via command line:
-```
+
+```sh
+# start the simulator on localhost:80
 sudo hue-simulator
+
+# start the simulator on localhost:8080 #
+hue-simulator --port=8080
+
+# start the simulator on 127.0.3.1:80 #
+sudo ifconfig lo0 alias 127.0.3.1
+sudo hue-simulator --hostname=127.0.3.1
 ```
-Sudo is necessary because we want to listen on port 80.
+
+Sudo is necessary when we want to listen on port 80, a so called low-port that are restricted to the unix root user.
 
 ## Debugger
 

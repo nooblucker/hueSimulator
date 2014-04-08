@@ -1,7 +1,15 @@
 #!/usr/bin/env node
 
+var parseArgs = require('minimist')
+var options = parseArgs(process.argv.slice(2), {
+    defaults: {
+        port: 80,
+        hostname: undefined
+    }
+});
+
 var bridge = require("../bridge.js");
 
-bridge.listen(80);
+bridge.listen(options.port, options.hostname);
 
-console.log("hue simulator listening on port 80");
+console.log("hue simulator listening on port " + options.port + ' ' + (!options.hostname ? 'on all interfaces' : ('on hostname ' + options.hostname)));
