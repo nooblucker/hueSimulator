@@ -34,7 +34,8 @@ $(function() {
         try {
             if (body !== "") {
                 data = JSON.parse(body);
-                body = "<pre>"+JSON.stringify(data, null, 2)+"</pre>";
+                data = JSON.stringify(data, null, 2);
+                body = "<pre>" + data + "</pre>";
             }
         } catch (e) {
             alert('malformed json: ' + e);
@@ -47,6 +48,8 @@ $(function() {
             url: url,
             method: method,
             data: data,
+            contentType: 'application/json; charset=UTF-8',
+            accepts: 'application/json; charset=utf-8',
             dataType: "json"
         });
 

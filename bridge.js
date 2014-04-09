@@ -40,7 +40,16 @@ var whitelist = function(req, res, next) {
 
 app.use(express.logger());
 app.use(express.static(__dirname + '/public_html'));
-app.use(express.bodyParser());
+app.use(function(request, response, next) {
+    // http://developers.meethue.com/7_messagestructureresponse.html says the request body MUST be JSON,
+    // but the SDK doesn't necessarily send the proper headers
+    if (request.method === 'POST' || request.method === 'PUT') {
+        request.headers['content-type'] = 'application/json; charset=UTF-8';
+    }
+    
+    next();
+});
+app.use(express.json());
 app.use(allowCrossDomain);
 app.use(sendJSON);
 
