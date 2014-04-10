@@ -9,7 +9,7 @@
   ],
   "license": "MIT",
   "author": "Sven Riecker <sven@nooblucker.de>",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "dependencies": {
     "express": "3.x",
     "minimist": "0.0.8"
