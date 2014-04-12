@@ -2,14 +2,24 @@
 
 var parseArgs = require('minimist')
 var options = parseArgs(process.argv.slice(2), {
-    "default": {
-        port: 80,
-        hostname: undefined
-    }
+	'default': {
+		port: 80,
+		hostname: undefined,
+		backlog: undefined
+	}
 });
 
-var bridge = require("../bridge.js");
+var bridge = require('../bridge.js');
+var domain = require('domain').create();
 
-bridge.listen(options.port, options.hostname);
+domain.on('error', function(err) {
+	console.log('Could not start hue simulator: ' + err.message);
+	if (err.code === 'EACCES') console.error('It looks like you do not have permission to listen on this port. Need sudo?');
+	if (err.code === 'EADDRINUSE') console.error('The address is already in use. Maybe you already have a service listening on port ' + options.port + '. Shut down the other process or use another port.');
+});
 
-console.log("hue simulator listening on port " + options.port + ' ' + (!options.hostname ? 'on all interfaces' : ('on hostname ' + options.hostname)));
+domain.run(function() {
+	bridge.listen(options.port, options.hostname, options.backlog, function() {
+		console.log('hue simulator listening on port ' + options.port + ' ' + (!options.hostname ? 'on all interfaces' : ('on hostname ' + options.hostname)));
+	});
+});
