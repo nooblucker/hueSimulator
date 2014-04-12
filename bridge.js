@@ -53,14 +53,6 @@ app.use(express.json());
 app.use(allowCrossDomain);
 app.use(sendJSON);
 
-
-app.use(function(err, req, res, next) {
-    if(!err) return next();
-    console.log("Could not start hue simulator: " + err.message);
-    if (err.code === "EACCES") console.log("It looks like you do not have permission to listen on this port. sudo?");
-    next(err);
-});
-
 app.set('state', {
     "lights": {
         "1": {
