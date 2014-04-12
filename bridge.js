@@ -377,6 +377,17 @@ app.put('/api/:username/groups/:id/action', whitelist, function(req, res) {
     res.send(200, JSON.stringify(result));
 });
 
+// -- Schedules API
+
+// Returns a list of all schedules in the system. Each group has a name and unique identification number.
+// If there are no schedules then the bridge will return an empty object, {}.
+app.get('/api/:username/schedules', whitelist, function(req, res) {
+    var result = mapObject(app.get('state').schedules, function(schedule) {
+        return selectSubsetFromJSON(schedule, 'name');
+    });
+    res.send(200, JSON.stringify(result));
+});
+
 // -- Configuration API
 
 // create user
