@@ -14,7 +14,7 @@ It should be installed [globally](http://blog.nodejitsu.com/npm-cheatsheet#Under
 
 ## Run
 
-Start the simulator via command line:
+Start the simulator via command line (if installed globally):
 
 ```sh
 # start the simulator on localhost:80
@@ -32,9 +32,9 @@ Sudo is necessary when we want to listen on port 80, a so called low-port that a
 
 ## Debugger
 
-Like a real bridge, you have a webinterface where you can enter commands. After starting the simulator, simply navigate your browser to the IP of the simulator.
+There is a webinterface where you can enter commands similar to the debugger of the real bridge. After starting the simulator, simply navigate your browser to the IP of the simulator.
 ![screenshot of webinterface](debugger.png "Debugger webinterface")
-In the list on the left, you have predefined commands, so you don't always have to look up the correct URL and write the whole JSON-body of the message. Click on a button, and the command-form is filled with dummy data for this kind of command.
+In the list on the left there are predefined commands, so you don't always have to look up the correct URL and write the whole JSON-body of the message. Click on a button, and the command-form is filled with dummy data for this kind of command.
 
 ## Routes
 
