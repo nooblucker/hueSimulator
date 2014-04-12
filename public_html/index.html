@@ -35,6 +35,38 @@
     "effect": "colorloop"
 }' data-method='PUT' >set group state</button></li>
                     </ul>
+
+                    <h4>Schedules API</h4>
+                    <ul class="unstyled">
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/schedules' data-body='' data-method='GET' >get all schedules</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/schedules' data-body='{
+    "name": "Wake up",
+    "description": "My wake up alarm",
+    "command": {
+        "address": "/api/<username>/groups/1/action",
+        "method": "PUT",
+        "body": {
+            "on": true
+        }
+    },
+    "time": "2011-03-30T14:24:40"
+}' data-method='POST' >create schedule</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/schedules/1' data-body='' data-method='GET' >get schedules attributes</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/schedules/1' data-body='{
+    "name": "Wake up",
+    "description": "My wake up alarm",
+    "command": {
+        "address": "/api/<username>/groups/1/action",
+        "method": "PUT",
+        "body": {
+            "on": true
+        }
+    },
+    "time": "2011-03-30T14:24:40"
+}' data-method='PUT' >set schedule attributes</button></li>
+                        <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/schedules/1' data-body='' data-method='DELETE' >delete schedule</button></li>
+                    </ul>
+
                     <h4>Configuration API</h4>
                     <ul class="unstyled">
                         <li><button class='btn btn-block' type="button" data-url='/api' data-body='{"devicetype":"test user","username":"newdeveloper"}' data-method='POST' >create user</button></li>
