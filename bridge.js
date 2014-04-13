@@ -1,5 +1,19 @@
 var express = require("express");
 var app = express();
+var CronJob = require('cron').CronJob;
+var request = require('request');
+
+Date.prototype.isValid = function() {
+  return isFinite(this);
+}
+
+Date.prototype.isPast = function() {
+    return this < new Date();
+}
+
+Date.prototype.toHueDateTimeFormat = function() {
+    return this.isValid() ? this.toJSON().substr(0, 19) : 'invalid date';
+}
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -26,16 +40,17 @@ var whitelist = function(req, res, next) {
             req.username = username;
             next();
         }
-    }
-    res.send(200, [
-        {
-            error: {
-                type: 1,
-                address: '/',
-                description: 'unauthorized user'
+    } else {
+        res.send(200, [
+            {
+                error: {
+                    type: 1,
+                    address: '/',
+                    description: 'unauthorized user'
+                }
             }
-        }
-    ]);
+        ]);
+    }
 };
 
 app.use(express.logger());
@@ -155,20 +170,7 @@ app.set('state', {
         "linkbutton": false,
         "portalservices": false
     },
-    "schedules": {
-        "1": {
-            "name": "schedule",
-            "description": "",
-            "command": {
-                "address": "/api/0/groups/0/action",
-                "body": {
-                    "on": true
-                },
-                "method": "PUT"
-            },
-            "time": "2012-10-29T12:00:00"
-        }
-    }
+    "schedules": {}
 });
 
 app.get('/', function(req, res) {
@@ -388,18 +390,6 @@ app.get('/api/:username/schedules', whitelist, function(req, res) {
     res.send(200, JSON.stringify(result));
 });
 
-Date.prototype.isValid = function() {
-  return isFinite(this);
-}
-
-Date.prototype.isPast = function() {
-    return this < new Date();
-}
-
-Date.prototype.toHueDateTimeFormat = function() {
-    return this.toJSON().substr(0, 19);
-}
-
 var nextScheduleId = function() {
     var id = 1;
     while(app.get('state').schedules[id]) id++;
@@ -421,6 +411,39 @@ var nextScheduleName = function() {
         name = 'schedule ' + (number++);
     }
     return name;
+}
+
+var scheduleCronJobs = {};
+
+var createSchedule = function(id, schedule) {
+    app.get('state').schedules[id] = schedule;
+    scheduleCronJobs[id] = new CronJob(new Date(schedule.time), function onTickSchedule() {
+        console.log('schedule ' + id + ' executing command: ' + JSON.stringify(schedule.command));
+        request({
+            'uri': 'http://127.0.0.1:' + (process.env.PORT || 80) + schedule.command.address,
+            'method': schedule.command.method,
+            'body': JSON.stringify(schedule.command.body)
+        }, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                console.log(body);
+            } else console.log(error);
+        });
+        this.stop();
+    }, function onCompleteSchedule() {
+        // on complete or stop: remove the schedule and the cronjob
+        delete scheduleCronJobs[id];
+        delete app.get('state').schedules[id];
+        console.log('schedule ' + id + ' executed and removed.');
+    }, 
+    true // start job directly
+    );
+}
+
+var deleteSchedule = function(id) {
+    var job = scheduleCronJobs[id];
+    if (job) {
+        job.stop();
+    }
 }
 
 // create schedule (real bridge can save up to 100)
@@ -458,24 +481,46 @@ app.post('/api/:username/schedules', whitelist, function(req, res) {
     var time = req.body.time;
     var id = nextScheduleId();
     var created = new Date().toHueDateTimeFormat();
-    app.get('state').schedules[id] = {
+    var schedule = {
         'name': name,
         'description': description,
         'command': command,
         'time': time,
         'created': created,
         'status': 'enabled'
-    }
+    };
+    createSchedule(id, schedule);
+    // output
     res.send(200, JSON.stringify([{
         "success":{"id": id.toString() }
     }]));
+});
+
+app.get('/api/:username/schedules/:id', whitelist, function(req, res) {
+    var id = req.params.id;
+    var schedule = app.get('state').schedules[id];
+    if (!schedule) {
+        // todo: duplicate code -> try to understand how bridge error handler works and do it abstract
+        // error 3 seems to be 'resource x not available' error
+        res.send(200, JSON.stringify([
+            {
+                "error": {
+                    "type": 3,
+                    "address": "/schedules/"+id,
+                    "description": "resource, /schedules/"+id+", not available"
+                }
+            }
+        ]))
+    } else {
+        res.send(200, JSON.stringify(schedule));
+    }
 });
 
 // delete schedule
 app.delete('/api/:username/schedules/:id', whitelist, function(req, res) {
     var id = req.params.id;
     if (app.get('state').schedules[id]) {
-        delete app.get('state').schedules[id];
+        deleteSchedule(id);
         res.send(200, JSON.stringify([{"success": "/schedules/" + id + " deleted."}]));
     } else {
         res.send(200, JSON.stringify([
@@ -489,6 +534,24 @@ app.delete('/api/:username/schedules/:id', whitelist, function(req, res) {
         ]));
     }
 });
+
+/*
+// create initial test schedule which turns all lights on in 2 seconds
+createSchedule(1, {
+    "name": "schedule",
+    "description": "",
+    "command": {
+        "address": "/api/newdeveloper/groups/0/action",
+        "body": {
+            "on": true
+        },
+        "method": "PUT"
+    },
+    "time": new Date(new Date().valueOf()+2000).toHueDateTimeFormat(),
+    "created": new Date().toHueDateTimeFormat(),
+    "status": "enabled"
+});
+*/
 
 // -- Configuration API
 
