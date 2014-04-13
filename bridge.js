@@ -388,6 +388,108 @@ app.get('/api/:username/schedules', whitelist, function(req, res) {
     res.send(200, JSON.stringify(result));
 });
 
+Date.prototype.isValid = function() {
+  return isFinite(this);
+}
+
+Date.prototype.isPast = function() {
+    return this < new Date();
+}
+
+Date.prototype.toHueDateTimeFormat = function() {
+    return this.toJSON().substr(0, 19);
+}
+
+var nextScheduleId = function() {
+    var id = 1;
+    while(app.get('state').schedules[id]) id++;
+    return id;
+}
+
+var scheduleNameExists = function(name) {
+    for (var scheduleId in app.get('state').schedules) {
+        var schedule = app.get('state').schedules[scheduleId];
+        if (schedule.name === name) return true; 
+    }
+    return false;
+}
+
+var nextScheduleName = function() {
+    var name = 'schedule'; // default name for schedules
+    var number = 1;
+    while (scheduleNameExists(name)) {
+        name = 'schedule ' + (number++);
+    }
+    return name;
+}
+
+// create schedule (real bridge can save up to 100)
+app.post('/api/:username/schedules', whitelist, function(req, res) {
+    // parameter time and command are required
+    if (!req.body.time || !req.body.command) {
+        res.send(200, JSON.stringify([
+            {
+                "error": {
+                    "type": 5,
+                    "address": "/schedules",
+                    "description": "invalid/missing parameters in body"
+                }
+            }
+        ]));
+    }
+    // bridge time is measured in UTC
+    var date = new Date(req.body.time);
+    if (!date.isValid() || date.isPast()) {
+        // invalid date and dates in the past raise error 7
+        res.send(200, JSON.stringify([
+            {
+                "error": {
+                    "type": 7,
+                    "address": "/schedules/time",
+                    "description": "invalid value, "+req.body.time+", for parameter, time"
+                }
+            }
+        ]));
+    }
+    // parameters are limited to different number of characters, those errors are not yet raised in the simulator
+    var name = req.body.name || nextScheduleName();
+    var description = req.body.description || '';
+    var command = req.body.command;
+    var time = req.body.time;
+    var id = nextScheduleId();
+    var created = new Date().toHueDateTimeFormat();
+    app.get('state').schedules[id] = {
+        'name': name,
+        'description': description,
+        'command': command,
+        'time': time,
+        'created': created,
+        'status': 'enabled'
+    }
+    res.send(200, JSON.stringify([{
+        "success":{"id": id.toString() }
+    }]));
+});
+
+// delete schedule
+app.delete('/api/:username/schedules/:id', whitelist, function(req, res) {
+    var id = req.params.id;
+    if (app.get('state').schedules[id]) {
+        delete app.get('state').schedules[id];
+        res.send(200, JSON.stringify([{"success": "/schedules/" + id + " deleted."}]));
+    } else {
+        res.send(200, JSON.stringify([
+            {
+                "error": {
+                    "type": 3,
+                    "address": "/schedules/"+id,
+                    "description": "resource, /schedules/"+id+", not available"
+                }
+            }
+        ]));
+    }
+});
+
 // -- Configuration API
 
 // create user
