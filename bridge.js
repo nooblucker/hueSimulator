@@ -449,6 +449,11 @@ app.get('/description.xml', function(request, response) {
         if (err) throw err;
 
         var address = app._server.address();
+        if (address.address === '0.0.0.0') {
+            // bound to all interfaces, just return the host that the request came in on
+            address.address = request.headers.host;
+        }
+
         data = data
             .replace(/\{\{IP\}\}/g, address.address)
             .replace(/\{\{PORT\}\}/g, address.port);
