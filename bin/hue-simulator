@@ -10,6 +10,7 @@ var options = parseArgs(process.argv.slice(2), {
 
 var bridge = require("../bridge.js");
 
-bridge.listen(options.port, options.hostname);
+// save server reference for use in route "/description.xml"
+bridge._server = bridge.listen(options.port, options.hostname);
 
 console.log("hue simulator listening on port " + options.port + ' ' + (!options.hostname ? 'on all interfaces' : ('on hostname ' + options.hostname)));

@@ -1,5 +1,6 @@
 var express = require("express");
 var app = express();
+var FS = require("fs");
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -443,6 +444,19 @@ app.get('/api/:username', whitelist, function(request, response) {
     response.send(200, JSON.stringify(app.get('state')));
 });
 
+app.get('/description.xml', function(request, response) {
+    FS.readFile(__dirname + '/description.xml', {encoding: 'utf8'}, function(err, data) {
+        if (err) throw err;
+
+        var address = app._server.address();
+        data = data
+            .replace(/\{\{IP\}\}/g, address.address)
+            .replace(/\{\{PORT\}\}/g, address.port);
+
+        response.header('Content-Type', 'application/xml; charset=UTF-8');
+        response.send(200, data);
+    });
+});
 
 
 module.exports = app;
