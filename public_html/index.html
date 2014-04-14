@@ -40,29 +40,29 @@
                     <ul class="unstyled">
                         <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/schedules' data-body='' data-method='GET' >get all schedules</button></li>
                         <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/schedules' data-body='{
-    "name": "Wake up",
-    "description": "My wake up alarm",
+    "name": "All lights on",
+    "description": "All lights on",
     "command": {
-        "address": "/api/<username>/groups/1/action",
+        "address": "/api/newdeveloper/groups/0/action",
         "method": "PUT",
         "body": {
             "on": true
         }
     },
-    "time": "2011-03-30T14:24:40"
+    "time": "2014-04-13T14:24:40"
 }' data-method='POST' >create schedule</button></li>
                         <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/schedules/1' data-body='' data-method='GET' >get schedules attributes</button></li>
                         <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/schedules/1' data-body='{
     "name": "Wake up",
     "description": "My wake up alarm",
     "command": {
-        "address": "/api/<username>/groups/1/action",
+        "address": "/api/newdeveloper/groups/0/action",
         "method": "PUT",
         "body": {
             "on": true
         }
     },
-    "time": "2011-03-30T14:24:40"
+    "time": "2014-04-13T14:24:40"
 }' data-method='PUT' >set schedule attributes</button></li>
                         <li><button class='btn btn-block' type="button" data-url='/api/newdeveloper/schedules/1' data-body='' data-method='DELETE' >delete schedule</button></li>
                     </ul>

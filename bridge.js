@@ -1,5 +1,19 @@
 var express = require("express");
 var app = express();
+var CronJob = require('cron').CronJob;
+var request = require('request');
+
+Date.prototype.isValid = function() {
+  return isFinite(this);
+}
+
+Date.prototype.isPast = function() {
+    return this < new Date();
+}
+
+Date.prototype.toHueDateTimeFormat = function() {
+    return this.isValid() ? this.toJSON().substr(0, 19) : 'invalid date';
+}
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -26,16 +40,17 @@ var whitelist = function(req, res, next) {
             req.username = username;
             next();
         }
-    }
-    res.send(200, [
-        {
-            error: {
-                type: 1,
-                address: '/',
-                description: 'unauthorized user'
+    } else {
+        res.send(200, [
+            {
+                error: {
+                    type: 1,
+                    address: '/',
+                    description: 'unauthorized user'
+                }
             }
-        }
-    ]);
+        ]);
+    }
 };
 
 app.use(express.logger());
@@ -155,20 +170,7 @@ app.set('state', {
         "linkbutton": false,
         "portalservices": false
     },
-    "schedules": {
-        "1": {
-            "name": "schedule",
-            "description": "",
-            "command": {
-                "address": "/api/0/groups/0/action",
-                "body": {
-                    "on": true
-                },
-                "method": "PUT"
-            },
-            "time": "2012-10-29T12:00:00"
-        }
-    }
+    "schedules": {}
 });
 
 app.get('/', function(req, res) {
@@ -387,6 +389,207 @@ app.get('/api/:username/schedules', whitelist, function(req, res) {
     });
     res.send(200, JSON.stringify(result));
 });
+
+var nextScheduleId = function() {
+    var id = 1;
+    while(app.get('state').schedules[id]) id++;
+    return id;
+}
+
+var scheduleNameExists = function(name) {
+    for (var scheduleId in app.get('state').schedules) {
+        var schedule = app.get('state').schedules[scheduleId];
+        if (schedule.name === name) return true; 
+    }
+    return false;
+}
+
+var nextScheduleName = function() {
+    var name = 'schedule'; // default name for schedules
+    var number = 1;
+    while (scheduleNameExists(name)) {
+        name = 'schedule ' + (number++);
+    }
+    return name;
+}
+
+var scheduleCronJobs = {};
+
+var createSchedule = function(id, schedule) {
+    app.get('state').schedules[id] = schedule;
+    scheduleCronJobs[id] = new CronJob(new Date(schedule.time), function onTickSchedule() {
+        console.log('schedule ' + id + ' executing command: ' + JSON.stringify(schedule.command));
+        request({
+            'uri': 'http://127.0.0.1:' + (process.env.PORT || 80) + schedule.command.address,
+            'method': schedule.command.method,
+            'body': JSON.stringify(schedule.command.body)
+        }, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                console.log(body);
+            } else console.log(error);
+        });
+        this.stop();
+    }, function onCompleteSchedule() {
+        // on complete or stop: remove the schedule and the cronjob
+        delete scheduleCronJobs[id];
+        delete app.get('state').schedules[id];
+        console.log('schedule ' + id + ' executed and removed.');
+    }, 
+    true // start job directly
+    );
+}
+
+var deleteSchedule = function(id) {
+    var job = scheduleCronJobs[id];
+    if (job) {
+        job.stop();
+    }
+}
+
+// create schedule (real bridge can save up to 100)
+app.post('/api/:username/schedules', whitelist, function(req, res) {
+    // parameter time and command are required
+    if (!req.body.time || !req.body.command) {
+        res.send(200, JSON.stringify([
+            {
+                "error": {
+                    "type": 5,
+                    "address": "/schedules",
+                    "description": "invalid/missing parameters in body"
+                }
+            }
+        ]));
+    }
+    // bridge time is measured in UTC
+    var date = new Date(req.body.time);
+    if (!date.isValid() || date.isPast()) {
+        // invalid date and dates in the past raise error 7
+        res.send(200, JSON.stringify([
+            {
+                "error": {
+                    "type": 7,
+                    "address": "/schedules/time",
+                    "description": "invalid value, "+req.body.time+", for parameter, time"
+                }
+            }
+        ]));
+    }
+    // parameters are limited to different number of characters, those errors are not yet raised in the simulator
+    var name = req.body.name || nextScheduleName();
+    var description = req.body.description || '';
+    var command = req.body.command;
+    var time = req.body.time;
+    var id = nextScheduleId();
+    var created = new Date().toHueDateTimeFormat();
+    var schedule = {
+        'name': name,
+        'description': description,
+        'command': command,
+        'time': time,
+        'created': created,
+        'status': 'enabled'
+    };
+    createSchedule(id, schedule);
+    // output
+    res.send(200, JSON.stringify([{
+        "success":{"id": id.toString() }
+    }]));
+});
+
+// get schedule attributes
+app.get('/api/:username/schedules/:id', whitelist, function(req, res) {
+    var id = req.params.id;
+    var schedule = app.get('state').schedules[id];
+    if (!schedule) {
+        // todo: duplicate code -> try to understand how bridge error handler works and do it abstract
+        // error 3 seems to be 'resource x not available' error
+        res.send(200, JSON.stringify([
+            {
+                "error": {
+                    "type": 3,
+                    "address": "/schedules/"+id,
+                    "description": "resource, /schedules/"+id+", not available"
+                }
+            }
+        ]))
+    } else {
+        res.send(200, JSON.stringify(schedule));
+    }
+});
+
+// set schedule attributes
+app.put('/api/:username/schedules/:id', whitelist, function(req, res) {
+    var id = req.params.id;
+    if (!app.get('state').schedules[id]) {
+        res.send(200, JSON.stringify([
+            {
+                "error": {
+                    "type": 704,
+                    "address": "/schedules/"+id,
+                    "description": "Cannot create schedule because tag, "+id+", is invalid."
+                }
+            }
+        ]));
+    } else {
+        if (req.body.time) {
+            var date = new Date(req.body.time);
+            if (!date.isValid() || date.isPast()) {
+                // invalid date and dates in the past raise error 7
+                res.send(200, JSON.stringify([
+                    {
+                        "error": {
+                            "type": 7,
+                            "address": "/schedules/time",
+                            "description": "invalid value, "+req.body.time+", for parameter, time"
+                        }
+                    }
+                ]));
+                return;
+            }
+        }
+        var result = updateProperties(app.get('state').schedules[id], req.body, '/schedules/'+id+'/');
+        // update create time
+        app.get('state').schedules[id].created = new Date().toHueDateTimeFormat();
+        res.send(200, JSON.stringify(result));
+    }
+});
+
+// delete schedule
+app.delete('/api/:username/schedules/:id', whitelist, function(req, res) {
+    var id = req.params.id;
+    if (app.get('state').schedules[id]) {
+        deleteSchedule(id);
+        res.send(200, JSON.stringify([{"success": "/schedules/" + id + " deleted."}]));
+    } else {
+        res.send(200, JSON.stringify([
+            {
+                "error": {
+                    "type": 3,
+                    "address": "/schedules/"+id,
+                    "description": "resource, /schedules/"+id+", not available"
+                }
+            }
+        ]));
+    }
+});
+
+/*
+// create initial test schedule which turns all lights on in 2 seconds
+createSchedule(1, {
+    "name": "schedule",
+    "description": "",
+    "command": {
+        "address": "/api/newdeveloper/groups/0/action",
+        "body": {
+            "on": true
+        },
+        "method": "PUT"
+    },
+    "time": new Date(new Date().valueOf()+2000).toHueDateTimeFormat(),
+    "created": new Date().toHueDateTimeFormat(),
+    "status": "enabled"
+});
+*/
 
 // -- Configuration API
 
