@@ -42,3 +42,14 @@ In the list on the left there are predefined commands, so you don't always have 
 
 At the moment, all routes from the hue API are available, except schedules.
 
+## Contributors
+[Rodney Rehm](https://github.com/rodneyrehm)
+[galactoise](https://github.com/galactoise)
+
+## Dependencies
+
+[node-cron](https://github.com/ncb000gt/node-cron)
+[request](https://github.com/mikeal/request)
+[minimist](https://github.com/substack/minimist)
+[expressjs](https://github.com/visionmedia/express)
+
