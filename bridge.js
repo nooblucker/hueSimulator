@@ -496,6 +496,7 @@ app.post('/api/:username/schedules', whitelist, function(req, res) {
     }]));
 });
 
+// get schedule attributes
 app.get('/api/:username/schedules/:id', whitelist, function(req, res) {
     var id = req.params.id;
     var schedule = app.get('state').schedules[id];
@@ -513,6 +514,43 @@ app.get('/api/:username/schedules/:id', whitelist, function(req, res) {
         ]))
     } else {
         res.send(200, JSON.stringify(schedule));
+    }
+});
+
+// set schedule attributes
+app.put('/api/:username/schedules/:id', whitelist, function(req, res) {
+    var id = req.params.id;
+    if (!app.get('state').schedules[id]) {
+        res.send(200, JSON.stringify([
+            {
+                "error": {
+                    "type": 704,
+                    "address": "/schedules/"+id,
+                    "description": "Cannot create schedule because tag, "+id+", is invalid."
+                }
+            }
+        ]));
+    } else {
+        if (req.body.time) {
+            var date = new Date(req.body.time);
+            if (!date.isValid() || date.isPast()) {
+                // invalid date and dates in the past raise error 7
+                res.send(200, JSON.stringify([
+                    {
+                        "error": {
+                            "type": 7,
+                            "address": "/schedules/time",
+                            "description": "invalid value, "+req.body.time+", for parameter, time"
+                        }
+                    }
+                ]));
+                return;
+            }
+        }
+        var result = updateProperties(app.get('state').schedules[id], req.body, '/schedules/'+id+'/');
+        // update create time
+        app.get('state').schedules[id].created = new Date().toHueDateTimeFormat();
+        res.send(200, JSON.stringify(result));
     }
 });
 
