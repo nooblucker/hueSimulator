@@ -433,7 +433,7 @@ var createSchedule = function(id, schedule) {
         // on complete or stop: remove the schedule and the cronjob
         delete scheduleCronJobs[id];
         delete app.get('state').schedules[id];
-        console.log('schedule ' + id + ' executed and removed.');
+        console.log('schedule ' + id + ' removed.');
     }, 
     true // start job directly
     );
@@ -547,9 +547,11 @@ app.put('/api/:username/schedules/:id', whitelist, function(req, res) {
                 return;
             }
         }
-        var result = updateProperties(app.get('state').schedules[id], req.body, '/schedules/'+id+'/');
-        // update create time
-        app.get('state').schedules[id].created = new Date().toHueDateTimeFormat();
+        var schedule = app.get('state').schedules[id];
+        schedule.created = new Date().toHueDateTimeFormat();
+        var result = updateProperties(schedule, req.body, '/schedules/'+id+'/');
+        deleteSchedule(id);
+        createSchedule(id, schedule);
         res.send(200, JSON.stringify(result));
     }
 });
