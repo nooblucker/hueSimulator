@@ -1,5 +1,7 @@
 var express = require("express");
 var app = express();
+var FS = require("fs");
+
 var CronJob = require('cron').CronJob;
 var request = require('request');
 
@@ -657,6 +659,25 @@ app.delete('/api/:username/config/whitelist/:userToBeDeleted', whitelist, functi
 // get full state
 app.get('/api/:username', whitelist, function(request, response) {
     response.send(200, JSON.stringify(app.get('state')));
+});
+
+app.get('/description.xml', function(request, response) {
+    FS.readFile(__dirname + '/description.xml', {encoding: 'utf8'}, function(err, data) {
+        if (err) throw err;
+
+        var address = app._server.address();
+        if (address.address === '0.0.0.0') {
+            // bound to all interfaces, just return the host that the request came in on
+            address.address = request.headers.host;
+        }
+
+        data = data
+            .replace(/\{\{IP\}\}/g, address.address)
+            .replace(/\{\{PORT\}\}/g, address.port);
+
+        response.header('Content-Type', 'application/xml; charset=UTF-8');
+        response.send(200, data);
+    });
 });
 
 module.exports = app;

@@ -31,7 +31,8 @@ domain.on('error', function(err) {
 });
 
 domain.run(function() {
-	bridge.listen(options.port, options.hostname, options.backlog, function() {
+	// save server reference for use in route "/description.xml"
+	bridge._server = bridge.listen(options.port, options.hostname, options.backlog, function() {
 		console.log('hue simulator listening @ ' + (options.hostname || localAddress()) + ':' + options.port);
 	});
 });
