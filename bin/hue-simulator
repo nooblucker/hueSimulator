@@ -12,18 +12,6 @@ var options = parseArgs(process.argv.slice(2), {
 var bridge = require('../bridge.js');
 var domain = require('domain').create();
 
-function localAddress() {
-    var os = require('os');
-    var ifaces = os.networkInterfaces();
-    var addresses = [];
-    for (var dev in ifaces) {
-        ifaces[dev].forEach(function (details) {
-            if (details.family == 'IPv4' && details.internal === false) addresses.push(details.address);
-        });
-    }
-    return addresses.length === 0 ? null : addresses[0];
-}
-
 domain.on('error', function(err) {
 	console.log('Could not start hue simulator: ' + err.message);
 	if (err.code === 'EACCES') console.error('It looks like you do not have permission to listen on this port. Need sudo?');
@@ -31,8 +19,5 @@ domain.on('error', function(err) {
 });
 
 domain.run(function() {
-	// save server reference for use in route "/description.xml"
-	bridge._server = bridge.listen(options.port, options.hostname, options.backlog, function() {
-		console.log('hue simulator listening @ ' + (options.hostname || localAddress()) + ':' + options.port);
-	});
+	bridge.run(options);
 });

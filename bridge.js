@@ -680,4 +680,23 @@ app.get('/description.xml', function(request, response) {
     });
 });
 
+function localAddress() {
+    var os = require('os');
+    var ifaces = os.networkInterfaces();
+    var addresses = [];
+    for (var dev in ifaces) {
+        ifaces[dev].forEach(function (details) {
+            if (details.family == 'IPv4' && details.internal === false) addresses.push(details.address);
+        });
+    }
+    return addresses.length === 0 ? null : addresses[0];
+}
+
+app.run = function(options) {
+    // save server reference for use in route "/description.xml"
+    app._server = app.listen(options.port, options.hostname, options.backlog, function() {
+        console.log('hue simulator listening @ ' + (options.hostname || localAddress()) + ':' + options.port);
+    });
+}
+
 module.exports = app;
