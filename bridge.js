@@ -193,11 +193,7 @@ app.get('/linkbutton', function(request, response) {
 app.get('/api/:username/lights', whitelist, function(req, res) {
     // get light state
     var lights = app.get('state').lights;
-    // only send names of lights
-    var result = mapObject(lights, function(light) {
-        return selectSubsetFromJSON(light, 'name');
-    });
-    res.send(200, JSON.stringify(result));
+    res.send(200, JSON.stringify(lights));
 });
 
 var mapObject = function(obj, fn) {
