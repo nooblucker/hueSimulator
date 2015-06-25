@@ -88,6 +88,8 @@ app.set('state', {
             "type": "Extended color light",
             "name": "Hue Lamp 1",
             "modelid": "LCT001",
+            "manufacturername": "Philips",
+            "uniqueid": "66:11:38:22:28:3b:8d:6f-0b",
             "swversion": "65003148",
             "pointsymbol": {
                 "1": "none",
@@ -116,6 +118,8 @@ app.set('state', {
             "type": "Extended color light",
             "name": "Hue Lamp 2",
             "modelid": "LCT001",
+            "manufacturername": "Philips",
+            "uniqueid": "c4:03:ae:98:28:d8:cc:af-0b",
             "swversion": "65003148",
             "pointsymbol": {
                 "1": "none",
@@ -193,11 +197,7 @@ app.get('/linkbutton', function(request, response) {
 app.get('/api/:username/lights', whitelist, function(req, res) {
     // get light state
     var lights = app.get('state').lights;
-    // only send names of lights
-    var result = mapObject(lights, function(light) {
-        return selectSubsetFromJSON(light, 'name');
-    });
-    res.send(200, JSON.stringify(result));
+    res.send(200, JSON.stringify(lights));
 });
 
 var mapObject = function(obj, fn) {
